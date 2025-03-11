@@ -7,12 +7,12 @@ st.set_page_config(
     layout='wide'
 )
 
-# Recupera os segredos do arquivo secrets.toml
-host = st.secrets["connections"]["postgresql"]["host"]
-port = st.secrets["connections"]["postgresql"].get("port", "5432")
-database = st.secrets["connections"]["postgresql"]["database"]
-username = st.secrets["connections"]["postgresql"]["username"]
-password = st.secrets["connections"]["postgresql"]["password"]
+# # Recupera os segredos do arquivo secrets.toml
+# host = st.secrets["connections"]["postgresql"]["host"]
+# port = st.secrets["connections"]["postgresql"].get("port", "5432")
+# database = st.secrets["connections"]["postgresql"]["database"]
+# username = st.secrets["connections"]["postgresql"]["username"]
+# password = st.secrets["connections"]["postgresql"]["password"]
 
 # Conexão com o banco de dados (não cacheada)
 def get_db_connection():
@@ -40,7 +40,7 @@ def get_produtos():
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT id, nome, categoria, unidade_medida, valor, distribuidor 
+                SELECT id, nome, categoria, unidade_medida, valor,  
                 FROM produtos 
                 ORDER BY nome
             """)
@@ -62,16 +62,16 @@ def get_estoque_loja(loja_id):
     return estoque
 
 # Função para cadastrar um novo produto (para produtos não cadastrados)
-def cadastrar_novo_produto(nome, categoria, unidade_medida, valor, distribuidor):
+def cadastrar_novo_produto(nome, categoria, unidade_medida, valor ):
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("SELECT MAX(id) FROM produtos")
             max_id = cursor.fetchone()[0]
             new_id = max_id + 1 if max_id is not None else 1
             cursor.execute("""
-                INSERT INTO produtos (id, nome, categoria, unidade_medida, valor, distribuidor)
+                INSERT INTO produtos (id, nome, categoria, unidade_medida, valor )
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (new_id, nome, categoria, unidade_medida, valor, distribuidor))
+            """, (new_id, nome, categoria, unidade_medida, valor))
         conn.commit()
     return new_id
 
