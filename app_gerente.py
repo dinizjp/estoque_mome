@@ -8,11 +8,11 @@ st.set_page_config(
 )
 
 # # Recupera os segredos do arquivo secrets.toml
-# host = st.secrets["connections"]["postgresql"]["host"]
-# port = st.secrets["connections"]["postgresql"].get("port", "5432")
-# database = st.secrets["connections"]["postgresql"]["database"]
-# username = st.secrets["connections"]["postgresql"]["username"]
-# password = st.secrets["connections"]["postgresql"]["password"]
+host = st.secrets["connections"]["postgresql"]["host"]
+port = st.secrets["connections"]["postgresql"].get("port", "6543")
+database = st.secrets["connections"]["postgresql"]["database"]
+username = st.secrets["connections"]["postgresql"]["username"]
+password = st.secrets["connections"]["postgresql"]["password"]
 
 # Conexão com o banco de dados (não cacheada)
 def get_db_connection():
