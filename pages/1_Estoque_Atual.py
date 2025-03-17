@@ -1,6 +1,7 @@
 import streamlit as st
 from utils import select_store, get_produtos, get_estoque_loja, atualizar_estoque
-import time
+import pandas as pd
+
 
 st.set_page_config(page_title="Estoque Atual", layout="wide")
 
@@ -15,6 +16,9 @@ def main():
     loja_id, loja_nome = loja_info
     st.write(f"Ajuste de estoque para a loja: **{loja_nome}**")
     
+    # --- Seção 1: Atualização Manual de Produtos ---
+    st.subheader("Atualizar Estoque Manualmente")
+    
     if 'estoque_updates' not in st.session_state:
         st.session_state.estoque_updates = []
     
@@ -27,7 +31,7 @@ def main():
         if pid not in estoque_dict:
             estoque_dict[pid] = {'nome': p[1], 'quantidade': 0}
     
-    st.markdown("### Selecionar produto para atualizar estoque")
+    st.markdown("#### Selecionar produto para atualizar estoque")
     
     selected_produto = st.selectbox("Selecione o produto", produtos, format_func=lambda p: f"{p[0]} - {p[1]}")
     selected_produto_id = selected_produto[0]
@@ -51,12 +55,9 @@ def main():
                 'novo_valor': novo_valor
             })
         st.success(f"Atualização para {estoque_dict[selected_produto_id]['nome']} adicionada!")
-       
-        
-       
     
     if st.session_state.estoque_updates:
-        st.markdown("### Atualizações selecionadas")
+        st.markdown("#### Atualizações selecionadas")
         for i, item in enumerate(st.session_state.estoque_updates):
             col1, col2, col3 = st.columns([4, 2, 2])
             with col1:
@@ -67,14 +68,40 @@ def main():
             with col3:
                 if st.button("Remover", key=f"remove_{item['produto_id']}"):
                     st.session_state.estoque_updates.pop(i)
-                   
     
     if st.button("Confirmar ajustes"):
         updates_dict = {item['produto_id']: item['novo_valor'] for item in st.session_state.estoque_updates}
         atualizar_estoque(loja_id, updates_dict)
         st.success("Estoque atualizado e movimentações registradas com sucesso!")
         st.session_state.estoque_updates = []
-       
+    
+    # --- Seção 2: Atualização via Upload de Planilha ---
+    st.subheader("Atualizar Estoque via Planilha")
+    
+    st.write("Faça upload de uma planilha (CSV ou Excel) com as colunas 'cod' e 'quantidade'.")
+    uploaded_file = st.file_uploader("Escolha a planilha", type=["csv", "xlsx"])
+    
+    if uploaded_file is not None:
+        # Ler o arquivo
+        if uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file)
+        else:
+            df = pd.read_excel(uploaded_file)
+        
+        # Renomear colunas para corresponder ao esperado
+        df = df.rename(columns={'cod': 'produto_id', 'quantidade': 'novo_valor'})
+        
+        # Exibir e permitir edição
+        st.write("Edite os dados abaixo, se necessário:")
+        edited_df = st.data_editor(df, num_rows="dynamic")
+        
+        # Botão para atualizar o banco de dados
+        if st.button("Confirmar Atualização via Planilha"):
+            # Criar dicionário de atualizações a partir do DataFrame editado
+            updates_dict = dict(zip(edited_df['produto_id'], edited_df['novo_valor']))
+            # Chamar a função de atualização
+            atualizar_estoque(loja_id, updates_dict)
+            st.success("Estoque atualizado via planilha com sucesso!")
 
 if __name__ == "__main__":
     main()
