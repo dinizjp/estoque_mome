@@ -1,7 +1,7 @@
 import streamlit as st
 from utils import select_store, get_produtos, get_estoque_loja, atualizar_estoque
 import pandas as pd
-
+from datetime import date
 
 st.set_page_config(page_title="Estoque Atual", layout="wide")
 
@@ -16,8 +16,8 @@ def main():
     loja_id, loja_nome = loja_info
     st.write(f"Ajuste de estoque para a loja: **{loja_nome}**")
     
-    # --- Seção 1: Atualização Manual de Produtos ---
-    st.subheader("Atualizar Estoque Manualmente")
+    # # --- Seção 1: Atualização Manual de Produtos ---
+    # st.subheader("Atualizar Estoque Manualmente")
     
     if 'estoque_updates' not in st.session_state:
         st.session_state.estoque_updates = []
@@ -69,9 +69,12 @@ def main():
                 if st.button("Remover", key=f"remove_{item['produto_id']}"):
                     st.session_state.estoque_updates.pop(i)
     
+    # Campo de data para atualização manual
+    data_contagem_manual = st.date_input("Data da contagem (manual)", value=date.today())
+    
     if st.button("Confirmar ajustes"):
         updates_dict = {item['produto_id']: item['novo_valor'] for item in st.session_state.estoque_updates}
-        atualizar_estoque(loja_id, updates_dict)
+        atualizar_estoque(loja_id, updates_dict, data_contagem_manual)
         st.success("Estoque atualizado e movimentações registradas com sucesso!")
         st.session_state.estoque_updates = []
     
@@ -95,12 +98,13 @@ def main():
         st.write("Edite os dados abaixo, se necessário:")
         edited_df = st.data_editor(df, num_rows="dynamic")
         
+        # Campo de data para atualização via planilha
+        data_contagem_planilha = st.date_input("Data da contagem (planilha)", value=date.today())
+        
         # Botão para atualizar o banco de dados
         if st.button("Confirmar Atualização via Planilha"):
-            # Criar dicionário de atualizações a partir do DataFrame editado
             updates_dict = dict(zip(edited_df['produto_id'], edited_df['novo_valor']))
-            # Chamar a função de atualização
-            atualizar_estoque(loja_id, updates_dict)
+            atualizar_estoque(loja_id, updates_dict, data_contagem_planilha)
             st.success("Estoque atualizado via planilha com sucesso!")
 
 if __name__ == "__main__":

@@ -93,7 +93,7 @@ def registrar_entrada(loja_id, itens):
         conn.commit()
 
 # Função para atualizar o estoque físico
-def atualizar_estoque(loja_id, estoque_atual_input):
+def atualizar_estoque(loja_id, estoque_atual_input, data_contagem):
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             for produto_id, novo_valor in estoque_atual_input.items():
@@ -112,11 +112,11 @@ def atualizar_estoque(loja_id, estoque_atual_input):
                         VALUES ('entrada', %s, %s, %s, %s, CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')
                     """, (produto_id, loja_id, abs(diferenca), 'Ajuste de estoque - entrada'))
                 cursor.execute("""
-                    INSERT INTO estoque (loja_id, produto_id, quantidade, data_atualizacao)
-                    VALUES (%s, %s, %s, CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')
+                    INSERT INTO estoque (loja_id, produto_id, quantidade, data_atualizacao, data_contagem)
+                    VALUES (%s, %s, %s, CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo', %s)
                     ON CONFLICT (loja_id, produto_id)
-                    DO UPDATE SET quantidade = %s, data_atualizacao = CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo'
-                """, (loja_id, produto_id, novo_valor, novo_valor))
+                    DO UPDATE SET quantidade = %s, data_atualizacao = CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo', data_contagem = %s
+                """, (loja_id, produto_id, novo_valor, data_contagem, novo_valor, data_contagem))
         conn.commit()
 
 # Função para registrar alerta de validade (ATUALIZADA para incluir observacao como opcional)
