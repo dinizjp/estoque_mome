@@ -1,62 +1,53 @@
-Aqui está o README.md revisado para o projeto `estoque_mome`, agora incluí as informações adicionais sobre os arquivos que você forneceu. 
-
-```markdown
 # estoque_mome
 
-Este projeto tem como objetivo fornecer um sistema de controle de estoque para lojas, permitindo gerenciar produtos, atualizar quantidades, registrar entradas e saídas, além de monitorar alertas de validade.
+Este projeto fornece um sistema de controle de estoque para lojas, permitindo gerenciar produtos, atualizar quantidades, registrar entradas, sair do estoque e monitorar alertas de validade.
+
+## Sumário
+
+- [Dependências e Instalação](#dependências-e-instalação)
+- [Como Rodar e Testar](#como-rodar-e-testar)
+- [Estrutura de Arquivos e Pastas](#estrutura-de-arquivos-e-pastas)
 
 ## Dependências e Instalação
 
-Para rodar o projeto, é necessário instalar as seguintes dependências:
-
-- streamlit==1.42.2
-- pandas==2.2.2
-- psycopg2-binary==2.9.10
-- openpyxl==3.1.5 
-
-Instale as dependências executando:
+Para executar o projeto, instale as dependências listadas no arquivo `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Certifique-se de configurar as variáveis de ambiente ou o arquivo `secrets.toml` com as credenciais do seu banco de dados PostgreSQL.
+Certifique-se de configurar as credenciais do banco de dados PostgreSQL no arquivo `secrets.toml` ou por variáveis de ambiente.
 
 ## Como Rodar e Testar
 
-1. Clone o repositório ou copie os arquivos do projeto.
-2. Configure o arquivo `secrets.toml` ou as variáveis de ambiente com as credenciais do banco de dados.
-3. Execute o aplicativo Streamlit para uma das páginas:
+1. Clone ou copie os arquivos do projeto.
+2. Configure o arquivo `secrets.toml` com as credenciais de acesso ao banco.
+3. Execute a aplicação Streamlit na página de acesso à loja:
+
 ```bash
 streamlit run Acesso_a_Loja.py
 ```
 
-Após o acesso à loja, você poderá navegar pelas diferentes páginas para gerenciar o estoque:
+Após acessar, navegue pelas páginas disponíveis para:
+- Gerenciar o estoque atual (`pages_1_Estoque_Atual.py`)
+- Registrar alertas de validade (`pages_2_Alerta_de_Validade.py`)
+- Registrar entradas externas (`pages_3_Entrada_Externa.py`)
 
-- Estoque Atual (`pages_1_Estoque_Atual.py`)
-- Alerta de Validade (`pages_2_Alerta_de_Validade.py`)
-- Entrada Externa (`pages_3_Entrada_Externa.py`)
-
-## Estrutura e Arquivos Principais
+## Estrutura de Arquivos e Pastas
 
 ```
 estoque_mome/
 │
-├── utils.py                 # Funções auxiliares para conexão e manipulação do banco de dados
-├── requirements.txt         # Dependências do projeto
-├── README.md                # Este arquivo
-├── Acesso_a_Loja.py         # Página de acesso à loja
+├── utils.py                     # Arquivo com funções de conexão e manipulação do banco
+├── requirements.txt             # Dependências necessárias
+├── README.md                    # Este arquivo
+├── Acesso_a_Loja.py             # Página para selecionar a loja
 └── pages/
-    ├── 1_Estoque_Atual.py   # Controle de estoque atualizado, permitindo atualizações manuais e via planilha
-    ├── 2_Alerta_de_Validade.py  # Registro de alertas de validade dos produtos
-    └── 3_Entrada_Externa.py  # Registro de entrada de novos produtos ao estoque
+    ├── 1_Estoque_Atual.py       # Controle de estoque atualizado e ajuste manual
+    ├── 2_Alerta_de_Validade.py  # Registro de alertas de validade
+    └── 3_Entrada_Externa.py     # Registro de entrada de produtos ao estoque
 ```
-
-Navegue pelo menu do Streamlit após rodar para interagir com as funcionalidades do sistema.
 
 ---
 
-Caso tenha dúvidas ou precise de suporte, consulte a documentação ou entre em contato com a equipe de desenvolvimento.
-```
-
-Esse README atualizado reflete a estrutura completa do projeto e descreve brevemente o propósito de cada arquivo relevante. Se precisar de mais informações ou alterações, estou à disposição!
+Este README oferece uma visão clara e objetiva do projeto, suas funcionalidades e como utilizá-lo. Para suporte ou dúvidas adicionais, consulte a documentação ou entre em contato com a equipe de desenvolvimento.
