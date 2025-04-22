@@ -192,3 +192,39 @@ def registrar_saida_planilha(loja_id: int, itens: list[dict], data_saida):
                 """, (loja_id, produto_id, quantidade, data_saida, quantidade, data_saida))
 
         conn.commit()        
+
+# Função para registrar entrada via XML
+def registrar_entrada_xml(loja_id, itens):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            for item in itens:
+                try:
+                    produto_id = int(item['id'])
+                except Exception:
+                    produto_id = item['id']
+                try:
+                    quantidade = int(float(item['quantidade']))
+                except Exception:
+                    quantidade = 0
+                motivo = item['motivo'] if item['motivo'] else "Entrada via XML"
+                data_entry = item.get("data")
+                if isinstance(data_entry, dt.datetime):
+                    pass
+                elif isinstance(data_entry, str) and data_entry.strip():
+                    try:
+                        data_entry = dt.datetime.fromisoformat(data_entry)
+                    except Exception:
+                        data_entry = dt.datetime.now()
+                else:
+                    data_entry = dt.datetime.now()
+                cursor.execute("""
+                    INSERT INTO movimentacoes_estoque (tipo, produto_id, loja_id, quantidade, motivo, data)
+                    VALUES ('entrada', %s, %s, %s, %s, %s)
+                """, (produto_id, loja_id, quantidade, motivo, data_entry))
+                cursor.execute("""
+                    INSERT INTO estoque (loja_id, produto_id, quantidade, data_atualizacao)
+                    VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (loja_id, produto_id)
+                    DO UPDATE SET quantidade = estoque.quantidade + %s, data_atualizacao = CURRENT_TIMESTAMP
+                """, (loja_id, produto_id, quantidade, quantidade))
+        conn.commit()
