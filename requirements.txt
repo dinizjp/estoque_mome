@@ -3,4 +3,4 @@ streamlit==1.42.2
 pandas==2.2.2
 psycopg2-binary==2.9.10
 xmltodict==0.14.2
-xlsxwriter=3.2.2
+xlsxwriter==3.2.2
