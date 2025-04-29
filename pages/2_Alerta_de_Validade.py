@@ -1,5 +1,3 @@
-# estoque_mome/pages/2_Alerta_de_Validade.py
-
 import streamlit as st
 import pandas as pd
 import datetime as dt
@@ -7,8 +5,20 @@ from utils import select_store, registrar_alerta_validade
 
 st.set_page_config(page_title="Alerta de Validade", layout="wide")
 
-# Caminho para o template Excel (coloque o arquivo no mesmo diretório ou ajuste o caminho)
+# Caminho para o template Excel (ajuste conforme necessário)
 TEMPLATE_PATH = "validade.xlsx"
+
+def parse_date(x):
+    """Converte valores diversos em objeto datetime.date ou retorna None se inválido."""
+    if isinstance(x, dt.date):
+        return x
+    if isinstance(x, dt.datetime):
+        return x.date()
+    try:
+        parsed = pd.to_datetime(x, errors="coerce")
+        return parsed.date() if not pd.isna(parsed) else None
+    except:
+        return None
 
 def page_alerta_validade():
     st.title("Alerta de Validade em Lote")
@@ -37,16 +47,20 @@ def page_alerta_validade():
     except FileNotFoundError:
         st.error(f"Template não encontrado em {TEMPLATE_PATH}")
 
-    # 3) Upload da planilha preenchida
+    # 3) Upload
     uploaded = st.file_uploader(
         "Selecione a planilha de validade",
         type=["xlsx", "xls", "csv"]
     )
     if uploaded:
-        # Leitura conforme tipo de arquivo
-        df = pd.read_excel(uploaded) if uploaded.name.endswith((".xls", ".xlsx")) else pd.read_csv(uploaded)
+        # Leitura
+        df = (
+            pd.read_excel(uploaded)
+            if uploaded.name.lower().endswith((".xls", ".xlsx"))
+            else pd.read_csv(uploaded)
+        )
 
-        # Se ainda houver coluna 'cod', renomeia para 'produto_id'
+        # Renomeia 'cod' para 'produto_id' caso exista
         if "cod" in df.columns:
             df = df.rename(columns={"cod": "produto_id"})
 
@@ -57,19 +71,21 @@ def page_alerta_validade():
             st.error(f"Colunas obrigatórias não encontradas: {faltantes}")
             return
 
-        # Converte a coluna de data para tipo date
-        df["data_vencimento"] = pd.to_datetime(df["data_vencimento"]).dt.date
+        # Converte e valida datas
+        df["data_vencimento"] = df["data_vencimento"].apply(parse_date)
+        if df["data_vencimento"].isna().any():
+            st.error("Algumas datas de vencimento estão em formato inválido.")
+            return
 
-        # Seleciona apenas as colunas que vamos editar/registar
+        # Mantém apenas colunas necessárias
         df = df[["produto_id", "lote", "data_vencimento", "quantidade"]]
 
-        # Descarta linhas com quantidade == 0 e reseta índice
+        # Filtra quantidades > 0
         df = df[df["quantidade"] != 0].reset_index(drop=True)
 
-        # Armazena no session_state para edição
         st.session_state["df_validade"] = df
 
-    # 4) Exibição no DataEditor e registro
+    # 4) Edição e registro
     if "df_validade" in st.session_state and not st.session_state["df_validade"].empty:
         df_edit = st.data_editor(
             st.session_state["df_validade"],
@@ -84,7 +100,6 @@ def page_alerta_validade():
         st.session_state["df_validade"] = df_edit
 
         if st.button("Registrar Alertas em Lote"):
-            # Timestamp de registro é sempre agora
             timestamp = dt.datetime.now()
             for _, row in st.session_state["df_validade"].iterrows():
                 registrar_alerta_validade(
