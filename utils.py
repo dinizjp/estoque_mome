@@ -1,6 +1,7 @@
 import streamlit as st
 import psycopg2
 import pandas as pd
+import datetime as dt
 
 # Recupera os segredos do arquivo secrets.toml
 host = st.secrets["connections"]["postgresql"]["host"]
@@ -119,15 +120,6 @@ def atualizar_estoque(loja_id, estoque_atual_input, data_contagem):
                 """, (loja_id, produto_id, novo_valor, data_contagem, novo_valor, data_contagem))
         conn.commit()
 
-# Função para registrar alerta de validade (ATUALIZADA para incluir observacao como opcional)
-def registrar_alerta_validade(loja_id, produto_id, quantidade, vencimento, observacao=None):
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO alerta_validade (produto_id, loja_id, data, vencimento, quantidade, observacao)
-                VALUES (%s, %s, CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo', %s, %s, %s)
-            """, (produto_id, loja_id, vencimento, quantidade, observacao))
-        conn.commit()
 
 # Função para selecionar loja (AJUSTADA para permitir troca de loja)
 def select_store():
@@ -154,44 +146,19 @@ def select_store():
         return st.session_state.loja_confirmada
 
 
-def registrar_saida_planilha(loja_id: int, itens: list[dict], data_saida):
-    """
-    Recebe:
-    - loja_id: int
-    - itens: lista de dicts com chaves 'produto_id' e 'quantidade'
-    - data_saida: datetime.datetime ou date
-
-    Para cada item, registra:
-    1) uma movimentação de tipo 'saida' em movimentacoes_estoque
-    2) decrementa o estoque na tabela estoque
-    """
+def registrar_alerta_validade(loja_id, produto_id, quantidade, data_vencimento, lote, data=None):
+    data_record = data if data else dt.datetime.now()
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            for item in itens:
-                produto_id = int(item['produto_id'])
-                quantidade  = int(item['quantidade'])
-
-                # 1) Movimentação de saída
-                cursor.execute("""
-                    INSERT INTO movimentacoes_estoque
-                      (tipo, produto_id, loja_id, quantidade, motivo, data)
-                    VALUES
-                      ('saida', %s, %s, %s, 'Saída diária', %s)
-                """, (produto_id, loja_id, quantidade, data_saida))
-
-                # 2) Atualização do estoque (subtraindo)
-                cursor.execute("""
-                    INSERT INTO estoque
-                      (loja_id, produto_id, quantidade, data_atualizacao)
-                    VALUES
-                      (%s, %s, -%s, %s)
-                    ON CONFLICT (loja_id, produto_id)
-                    DO UPDATE
-                      SET quantidade = estoque.quantidade - %s,
-                          data_atualizacao = %s
-                """, (loja_id, produto_id, quantidade, data_saida, quantidade, data_saida))
-
-        conn.commit()        
+            cursor.execute(
+                """
+                INSERT INTO lote_validade
+                    (produto_id, loja_id, data, vencimento, quantidade, lote)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (produto_id, loja_id, data_record, data_vencimento, quantidade, lote)
+            )
+        conn.commit()
 
 # Função para registrar entrada via XML
 def registrar_entrada_xml(loja_id, itens):
