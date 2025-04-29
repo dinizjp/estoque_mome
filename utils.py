@@ -146,7 +146,7 @@ def select_store():
         return st.session_state.loja_confirmada
 
 
-def registrar_alerta_validade(loja_id, produto_id, quantidade, data_vencimento, lote, data=None):
+def registrar_alerta_validade(loja_id, cod, quantidade, data_vencimento, lote, data=None):
     data_record = data if data else dt.datetime.now()
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
@@ -156,7 +156,7 @@ def registrar_alerta_validade(loja_id, produto_id, quantidade, data_vencimento, 
                     (produto_id, loja_id, data, vencimento, quantidade, lote)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 """,
-                (produto_id, loja_id, data_record, data_vencimento, quantidade, lote)
+                (cod, loja_id, data_record, data_vencimento, quantidade, lote)
             )
         conn.commit()
 
