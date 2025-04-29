@@ -21,7 +21,7 @@ def page_alerta_validade():
     # 2) Download do template
     st.markdown(
         "Faça download do modelo de planilha e preencha as colunas: "
-        "`produto_id`, `lote`, `data_vencimento` (YYYY-MM-DD), `quantidade`."
+        "`lote`, `data_vencimento`, `quantidade`."
     )
     try:
         with open(TEMPLATE_PATH, "rb") as f:
