@@ -1,3 +1,5 @@
+# estoque_mome/pages/2_Alerta_de_Validade.py
+
 import streamlit as st
 import pandas as pd
 import datetime as dt
@@ -5,7 +7,7 @@ from utils import select_store, registrar_alerta_validade
 
 st.set_page_config(page_title="Alerta de Validade", layout="wide")
 
-# Path to the Excel template; atualize caso mova o arquivo
+# Caminho para o template Excel (coloque o arquivo no mesmo diretório ou ajuste o caminho)
 TEMPLATE_PATH = "validade.xlsx"
 
 def page_alerta_validade():
@@ -41,22 +43,33 @@ def page_alerta_validade():
         type=["xlsx", "xls", "csv"]
     )
     if uploaded:
-        df = (
-            pd.read_excel(uploaded)
-            if uploaded.name.endswith((".xls", ".xlsx"))
-            else pd.read_csv(uploaded)
-        )
+        # Leitura conforme tipo de arquivo
+        df = pd.read_excel(uploaded) if uploaded.name.endswith((".xls", ".xlsx")) else pd.read_csv(uploaded)
+
+        # Se ainda houver coluna 'cod', renomeia para 'produto_id'
+        if "cod" in df.columns:
+            df = df.rename(columns={"cod": "produto_id"})
+
+        # Verifica colunas obrigatórias
         expected = {"produto_id", "lote", "data_vencimento", "quantidade"}
         faltantes = expected - set(df.columns)
         if faltantes:
             st.error(f"Colunas obrigatórias não encontradas: {faltantes}")
             return
 
-        # descarta zeros e reseta índice
+        # Converte a coluna de data para tipo date
+        df["data_vencimento"] = pd.to_datetime(df["data_vencimento"]).dt.date
+
+        # Seleciona apenas as colunas que vamos editar/registar
+        df = df[["produto_id", "lote", "data_vencimento", "quantidade"]]
+
+        # Descarta linhas com quantidade == 0 e reseta índice
         df = df[df["quantidade"] != 0].reset_index(drop=True)
+
+        # Armazena no session_state para edição
         st.session_state["df_validade"] = df
 
-    # 4) Edição interativa
+    # 4) Exibição no DataEditor e registro
     if "df_validade" in st.session_state and not st.session_state["df_validade"].empty:
         df_edit = st.data_editor(
             st.session_state["df_validade"],
@@ -70,8 +83,8 @@ def page_alerta_validade():
         )
         st.session_state["df_validade"] = df_edit
 
-        # 5) Registro automático com timestamp atual
         if st.button("Registrar Alertas em Lote"):
+            # Timestamp de registro é sempre agora
             timestamp = dt.datetime.now()
             for _, row in st.session_state["df_validade"].iterrows():
                 registrar_alerta_validade(

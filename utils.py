@@ -147,7 +147,7 @@ def select_store():
 
 
 def registrar_alerta_validade(loja_id, produto_id, quantidade, data_vencimento, lote, data=None):
-   
+    
     data_record = data if data else dt.datetime.now()
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
