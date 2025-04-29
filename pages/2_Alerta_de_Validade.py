@@ -1,4 +1,4 @@
-mport streamlit as st
+import streamlit as st
 import pandas as pd
 import datetime as dt
 from utils import select_store, registrar_alerta_validade
