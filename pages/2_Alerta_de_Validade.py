@@ -46,7 +46,7 @@ def page_alerta_validade():
             if uploaded.name.endswith((".xls", ".xlsx"))
             else pd.read_csv(uploaded)
         )
-        expected = {"produto_id", "lote", "data_vencimento", "quantidade"}
+        expected = {"cod", "lote", "data_vencimento", "quantidade"}
         faltantes = expected - set(df.columns)
         if faltantes:
             st.error(f"Colunas obrigatórias não encontradas: {faltantes}")
@@ -62,7 +62,7 @@ def page_alerta_validade():
             st.session_state["df_validade"],
             num_rows="dynamic",
             column_config={
-                "produto_id":      st.column_config.NumberColumn("produto_id", required=True),
+                "cod":      st.column_config.NumberColumn("cod", required=True),
                 "lote":            st.column_config.TextColumn("lote", required=True),
                 "data_vencimento": st.column_config.DateColumn("data_vencimento", required=True),
                 "quantidade":      st.column_config.NumberColumn("quantidade", required=True, min_value=1),
@@ -76,7 +76,7 @@ def page_alerta_validade():
             for _, row in st.session_state["df_validade"].iterrows():
                 registrar_alerta_validade(
                     loja_id=loja_id,
-                    produto_id=int(row["produto_id"]),
+                    cod=int(row["cod"]),
                     quantidade=int(row["quantidade"]),
                     data_vencimento=row["data_vencimento"],
                     lote=row["lote"],
