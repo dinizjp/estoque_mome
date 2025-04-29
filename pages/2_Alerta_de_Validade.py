@@ -47,7 +47,7 @@ def page_alerta_validade():
     except FileNotFoundError:
         st.error(f"Template não encontrado em {TEMPLATE_PATH}")
 
-    # 3) Upload
+    # 3) Upload da planilha preenchida
     uploaded = st.file_uploader(
         "Selecione a planilha de validade",
         type=["xlsx", "xls", "csv"]
@@ -60,9 +60,12 @@ def page_alerta_validade():
             else pd.read_csv(uploaded)
         )
 
-        # Renomeia 'cod' para 'produto_id' caso exista
+        # Renomeia 'cod' para 'produto_id', se ainda existir
         if "cod" in df.columns:
             df = df.rename(columns={"cod": "produto_id"})
+
+        # Elimina linhas totalmente vazias nas 4 colunas principais
+        df = df.dropna(how="all", subset=["produto_id", "lote", "data_vencimento", "quantidade"])
 
         # Verifica colunas obrigatórias
         expected = {"produto_id", "lote", "data_vencimento", "quantidade"}
@@ -71,13 +74,15 @@ def page_alerta_validade():
             st.error(f"Colunas obrigatórias não encontradas: {faltantes}")
             return
 
-        # Converte e valida datas
+        # Converte e valida datas, em seguida descarta linhas com data inválida
         df["data_vencimento"] = df["data_vencimento"].apply(parse_date)
-        if df["data_vencimento"].isna().any():
-            st.error("Algumas datas de vencimento estão em formato inválido.")
-            return
+        mask_valid_date = df["data_vencimento"].notna()
+        if not mask_valid_date.all():
+            # remove apenas as linhas de data inválida (assumindo que são vazias ou mal formatadas)
+            df = df[mask_valid_date]
+            st.warning("Algumas linhas sem data_vencimento válida foram ignoradas.")
 
-        # Mantém apenas colunas necessárias
+        # Mantém apenas as colunas de interesse
         df = df[["produto_id", "lote", "data_vencimento", "quantidade"]]
 
         # Filtra quantidades > 0
@@ -85,7 +90,7 @@ def page_alerta_validade():
 
         st.session_state["df_validade"] = df
 
-    # 4) Edição e registro
+    # 4) Exibição no DataEditor e registro
     if "df_validade" in st.session_state and not st.session_state["df_validade"].empty:
         df_edit = st.data_editor(
             st.session_state["df_validade"],
