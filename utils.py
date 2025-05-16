@@ -38,7 +38,7 @@ def get_produtos():
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT id, nome, categoria, unidade_medida, valor  
+                SELECT id, nome, categoria, valor  
                 FROM produtos 
                 ORDER BY nome
             """)
