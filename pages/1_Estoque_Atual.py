@@ -5,6 +5,9 @@ from datetime import date
 
 st.set_page_config(page_title="Estoque Atual", layout="wide")
 
+# Path to the Excel template; atualize caso mova o arquivo
+TEMPLATE_PATH = "estoque.xlsx"
+
 def main():
     st.title("Estoque Atual")
     
@@ -14,8 +17,20 @@ def main():
         return
     
     loja_id, loja_nome = loja_info
-    st.write(f"Ajuste de estoque para a loja: **{loja_nome}**")
     
+    st.write(f"Ajuste de estoque para a loja: **{loja_nome}**")
+    # 2) Download do template
+    try:
+        with open(TEMPLATE_PATH, "rb") as f:
+            template_bytes = f.read()
+        st.download_button(
+            label="📥 Baixar Modelo de Planilha de Estoque",
+            data=template_bytes,
+            file_name="estoque.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except FileNotFoundError:
+        st.error(f"Template não encontrado em {TEMPLATE_PATH}")
     # # --- Seção 1: Atualização Manual de Produtos ---
     # st.subheader("Atualizar Estoque Manualmente")
     

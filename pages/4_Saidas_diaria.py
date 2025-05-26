@@ -7,6 +7,8 @@ from utils import select_store, registrar_saida_planilha
 
 st.set_page_config(page_title="Saída Diária", layout="wide")
 
+TEMPLATE_PATH = "estoque.xlsx"
+
 def page_saida_diaria():
     st.title("Saída Diária de Estoque")
 
@@ -16,6 +18,20 @@ def page_saida_diaria():
         st.warning("Por favor, selecione uma loja.")
         return
     loja_id, loja_nome = loja_info
+
+    st.write(f"Ajuste de estoque para a loja: **{loja_nome}**")
+    # 2) Download do template 
+    try:
+        with open(TEMPLATE_PATH, "rb") as f:
+            template_bytes = f.read()
+        st.download_button(
+            label="📥 Baixar Modelo de Planilha de Estoque",
+            data=template_bytes,
+            file_name="estoque.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except FileNotFoundError:
+        st.error(f"Template não encontrado em {TEMPLATE_PATH}")
 
     # 2) Upload da planilha
     st.markdown("Faça upload de uma planilha CSV ou Excel com colunas: `cod`, `produto`, `quantidade`.")
